@@ -50,13 +50,24 @@ export const updateCalculation = async (
       throw new Error('ID inválido');
     }
 
-    const updatedCalculation = await Calculation.findByIdAndUpdate(
+    const updatedCalculation = await Calculation.findOneAndUpdate(
+      { _id: id },
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedCalculation) {
+      throw new Error('Não foi possível encontrar o cálculo para atualizar.');
+    }
+
+    return updatedCalculation;
+   /* const updatedCalculation = await Calculation.findByIdAndUpdate(
       id,
       updateData,
       { new: true } // Retorna o documento atualizado
     );
 
-    return updatedCalculation;
+    return updatedCalculation;*/
 
   } catch (error) {
     console.error(`Ocorreu um erro no Update Calculation: ERRO: [${error}]`);

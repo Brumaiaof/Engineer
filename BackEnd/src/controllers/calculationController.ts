@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as CalculationService from '../services/calculationService'; // importa as funções criadas na pasta services
 import mongoose from 'mongoose';
+import RabbitMQService from '../rabbitmq/serviceRabbit';
 
 // Funções controladoras
 export const createCalculation = async (req: Request, res: Response): Promise<void> => {
@@ -14,10 +15,15 @@ export const createCalculation = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const newCalculation = await CalculationService.createCalculation(number1, number2);
-    console.log("Novo cálculo criado com sucesso:", newCalculation);
 
+    const newCalculation = await CalculationService.createCalculation(number1, number2);
+    console.log("Novo cálculo criado com sucesso:");
     res.status(201).json(newCalculation);
+
+    console.log("Enviando para a fila...");
+    await RabbitMQService.sendToQueue('calculationQueue', newCalculation);
+
+
   } catch (error) {
     console.error('Erro ao criar cálculo:', error);
     res.status(500).json({ error: 'Erro ao criar cálculo', details:  error });
