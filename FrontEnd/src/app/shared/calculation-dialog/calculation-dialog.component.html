@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>{{ data._id ? 'Edit Sum' : 'New Sum' }}</h2>
+<mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Number 1</mat-label>
+    <input type="number" matInput [(ngModel)]="data.number1" required />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Number 2</mat-label>
+    <input type="number" matInput [(ngModel)]="data.number2" required />
+  </mat-form-field>
+
+
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+
+  <!-- Botão para criação -->
+  <button *ngIf="!data._id" mat-button color="primary" (click)="onCreate()" 
+          [disabled]="!data.number1 || !data.number2" cdkFocusInitial>
+    Create
+  </button>
+
+  <!-- Botão para atualização -->
+  <button *ngIf="data._id" mat-button color="primary" (click)="onUpdate()" 
+          [disabled]="!data.number1 || !data.number2" cdkFocusInitial>
+    Update
+  </button>
+</mat-dialog-actions>

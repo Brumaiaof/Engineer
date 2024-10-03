@@ -1,0 +1,71 @@
+# Node modules
+node_modules/
+
+# Compiled output
+dist/
+out-tsc/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+jspm_packages/
+
+# IDEs e Editor Configurações
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# Angular cache
+.angular/cache/
+
+# Diretórios temporários
+tmp/
+temp/
+
+# Arquivos de build e debug
+*.map
+
+# Coverage reports
+coverage/
+
+# Mistakenly committed environment files
+environment.prod.ts
+environment.ts
+
+# Teste result logs
+test-results/
+
+# Compiled JavaScript
+*.js
+*.jsx
+
+# Diretórios de build da Angular CLI e webpack
+.angular/
+webpack/
+
+# Coverage directory used by Jest
+coverage/
+
+# IDE-specific files
+/.idea
+*.iml
+
+# Miscelâneos
+*.swp
+*.swo
+*.bak
+
+# Compiled CSS
+*.css.map
+*.scss.map
