@@ -49,7 +49,7 @@ export class CalculationsComponent implements OnInit {
       if (result) {
         this.saving = true;
   
-        // Chamando diretamente a lógica de criação
+       
         this.calculationService.create(result).subscribe({
           next: data => {
             const newCalculation = new CalculationModel(
@@ -83,7 +83,7 @@ export class CalculationsComponent implements OnInit {
 
     const dialogRef = this.dialog.open(CalculationDialogComponent, {
       width: '250px',
-      data: { ...calculation } // Abre o diálogo com os dados existentes para atualização
+      data: { ...calculation } 
     });
   
     dialogRef.afterClosed().pipe(take(1)).subscribe(result => {

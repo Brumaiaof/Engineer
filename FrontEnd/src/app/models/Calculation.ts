@@ -1,9 +1,9 @@
 export default interface Calculation {
-  readonly _id: string; // O ID gerado automaticamente pelo MongoDB
+  readonly _id: string; 
   number1: number;
   number2: number;
   result?: number;
-  status?: 'pending' | 'error' | 'done'; // Agora `status` é opcional
+  status?: 'pending' | 'error' | 'done'; 
 }
 
 export class CalculationModel implements Calculation {
@@ -11,11 +11,11 @@ export class CalculationModel implements Calculation {
     public readonly _id: string,
     public number1: number,
     public number2: number,
-    public result?: number, // Parâmetro opcional
-    public status?: 'pending' | 'error' | 'done' // Parâmetro opcional
+    public result?: number, 
+    public status?: 'pending' | 'error' | 'done' 
   ) {}
 
-  // Getter para retornar `_id` como `id`
+  /// para retornar `_id` como `id`
   get id(): string {
     return this._id;
   }

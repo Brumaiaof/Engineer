@@ -1,7 +1,6 @@
 
 
-
-import {Router} from "express"; //criar um roteador
+import {Router} from "express"; 
 
 
 import{
@@ -9,7 +8,7 @@ import{
     getAllCalculations,
     updateCalculation,
     deleteCalculation 
-} from '../controllers/calculationController';
+} from '../controllers/calculationControllerService';
 
 const router: Router = Router();
 
@@ -21,4 +20,4 @@ router.delete('/delete/calculation/:id', deleteCalculation);
 
 
 
-export default router; //exporta o roteador para ser usado em outros 
+export default router; 

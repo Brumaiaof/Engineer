@@ -11,36 +11,24 @@ import cors from "cors";
 
 const app: Application = express();
 
-mongoose.connect("mongodb://127.0.0.1:27017/crud")
-.then(() => {
-    console.log("Mongo conectado!");
-})
-.catch((error: any) => {
-    console.error("Ocorreu um erro na conexao com o BD :", error);
-});
 
-/*app.post('/test', (req, res) => {
-    console.log(req.body);
-    res.json({ message: 'Dados recebidos com sucesso', data: req.body });
-  });*/
-  
+const mongoURI = "mongodb://127.0.0.1:27017/crud";
+mongoose.connect(mongoURI)
+    .then(() => {
+        console.log("Mongo conectado!");
 
-const PORT = 4000;
+        
+        const PORT = 3000;
+        app.listen(PORT, () => {
+            console.log(`Rodando na porta: http://localhost:${PORT}`);
+        });
+    })
+    .catch((error: any) => {
+        console.error("Ocorreu um erro na conexao com o BD :", error);
+        process.exit(1); 
+    });
 
-app.use(cors()); 
 
+app.use(cors());
 app.use(express.json());
-
 app.use('/api', calculationRoutes);
-
-/*app.get('/api', (req, res) => {
-    res.json({ message: 'API encontrada' });
-  });*/
-  
- 
-
-
-
-app.listen(PORT, () => {
-    console.log(`Rodando na porta: http://localhost:${PORT}`)
-});

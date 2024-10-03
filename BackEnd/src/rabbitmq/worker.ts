@@ -1,12 +1,16 @@
 import amqp from 'amqplib';
-import * as CalculationService from '../services/calculationService'; // Importa os serviços de cálculo
-import { ICalculation } from '../models/Calculation'; // Importa a interface para garantir a tipagem correta
+import { updateCalculation } from '../controllers/calculationControllerService'; 
+import connectDB from '../rabbitmq/conecctionDb'; 
+import Calculation from '../models/Calculation'; 
 
 const QUEUE_NAME = 'calculationResultQueue';
 
 async function startWorker() {
   try {
-    // Conecta ao RabbitMQ
+    
+    await connectDB();
+
+    
     const connection = await amqp.connect('amqp://guest:guest@localhost:5672');
     const channel = await connection.createChannel();
     await channel.assertQueue(QUEUE_NAME, { durable: true });
@@ -21,45 +25,54 @@ async function startWorker() {
           console.log(' [x] Mensagem recebida:', messageContent);
 
           try {
-            // Desserializa a mensagem
+            
             const calculation = JSON.parse(messageContent);
 
-            // Verifica se o cálculo contém o ID
+            
             if (!calculation._id) {
               console.error(' [!] Mensagem recebida sem _id:', messageContent);
+              channel.ack(msg); 
               return;
             }
 
-            // Definir status de forma segura, garantindo que o tipo esteja correto
-            const status: ICalculation['status'] = calculation.status as ICalculation['status'];
-
-            // Atualiza o cálculo no MongoDB com os novos dados
-            const updatedData: Partial<ICalculation> = {
-              result: calculation.result,
-              status,
-            };
-
-            const updatedCalculation = await CalculationService.updateCalculation(
-              calculation._id,
-              updatedData
-            );
-
-            if (updatedCalculation) {
-              console.log(' [x] Cálculo atualizado com sucesso no MongoDB:', updatedCalculation);
-            } else {
-              console.error(' [!] Falha ao atualizar o cálculo no MongoDB:', calculation._id);
+            
+            const existingCalculation = await Calculation.findById(calculation._id);
+            if (existingCalculation && existingCalculation.status === 'done') {
+              console.warn(' [!] Cálculo já foi processado, ignorando:', calculation._id);
+              channel.ack(msg); 
+              return;
             }
 
-            // Confirma a mensagem como processada
+            
+            const updatedData = {
+              result: calculation.result,
+              status: calculation.status as 'done' | 'pending' | 'error', 
+            };
+
+            
+            const req = {
+              params: { id: calculation._id },
+              body: updatedData,
+            };
+            const res = {
+              json: (response: any) => console.log(' [x] Resposta do updateCalculation:', response),
+              status: (code: number) => ({
+                json: (response: any) => console.error(`[!] Status ${code}:`, response),
+              }),
+            };
+
+            await updateCalculation(req as any, res as any); 
+
+            
             channel.ack(msg);
           } catch (error) {
             console.error(' [!] Erro ao processar mensagem:', error);
-            // Não faz ack da mensagem para reprocessamento ou análise posterior
+            
           }
         }
       },
       {
-        noAck: false, // Habilita o "acknowledgment" manual para garantir o processamento
+        noAck: false, 
       }
     );
   } catch (error) {
