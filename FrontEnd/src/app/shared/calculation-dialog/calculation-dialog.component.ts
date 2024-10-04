@@ -101,17 +101,17 @@ export class CalculationDialogComponent implements OnInit {
       return;
     }
 
-    this.isSubmitting = true; // Marca o início da submissão
+    this.isSubmitting = true; 
 
     this.calculationsService.create(this.data).subscribe({
       next: (response) => {
         console.log('Cálculo submetido com sucesso:', response);
-        this.isSubmitting = false; // Libera o estado de submissão
-        this.dialogRef.close(response); // Fecha o diálogo com a resposta
+        this.isSubmitting = false; 
+        this.dialogRef.close(response); 
       },
       error: (error) => {
         console.error('Erro ao submeter o cálculo:', error);
-        this.isSubmitting = false; // Libera o estado de submissão em caso de erro
+        this.isSubmitting = false; 
       }
     });
   }

@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import Calculation, { ICalculation } from "../models/Calculation"; 
 import RabbitMQService from '../rabbitmq/serviceRabbit'; 
 
-
 export const createCalculation = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log("Recebendo requisição de criação com body:", JSON.stringify(req.body, null, 2));
@@ -16,23 +15,26 @@ export const createCalculation = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-     
-     let existingCalculation = await Calculation.findOne({ number1, number2, status: 'pending' });
+    // Verifica se já existe um cálculo com os mesmos parâmetros (independente do status)
+    const existingCalculation = await Calculation.findOne({ number1, number2 });
 
-     if (!existingCalculation) {
-       // Cria o cálculo apenas se ele não existir
-       const calculation = new Calculation({ number1, number2, status: "pending" });
-       existingCalculation = await calculation.save();
-       console.log("Novo cálculo criado com sucesso:");
-     } else {
-       console.warn("Cálculo já existe com os mesmos parâmetros.");
-       res.status(400).json({ error: 'Cálculo já existe com os mesmos parâmetros.' });
-       return;
-     }
- 
-     res.status(201).json(existingCalculation);
-     console.log("Enviando para a fila...");
-     await RabbitMQService.sendToQueue('calculationQueue', existingCalculation);
+    if (existingCalculation) {
+      console.warn("Cálculo já existe com os mesmos parâmetros.");
+      res.status(400).json({ error: 'Cálculo já existe com os mesmos parâmetros.' });
+      return;
+    }
+
+    // Cria o cálculo com status 'pending'
+    const calculation = new Calculation({ number1, number2, status: "pending" });
+    const savedCalculation = await calculation.save();
+    console.log("Novo cálculo criado com sucesso:", savedCalculation);
+
+    // Envia para a fila do RabbitMQ
+    console.log("Enviando para a fila...");
+    await RabbitMQService.sendToQueue('calculationQueue', savedCalculation);
+
+    // Retorna a resposta com o cálculo criado
+    res.status(201).json(savedCalculation);
 
   } catch (error) {
     console.error('Erro ao criar cálculo:', error);
@@ -40,13 +42,13 @@ export const createCalculation = async (req: Request, res: Response): Promise<vo
   }
 };
 
-
 export const getAllCalculations = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log("Recebendo requisição para buscar todos os cálculos.");
-    const calculations = await Calculation.find(); // Busca todos os cálculos
-    console.log("Cálculos encontrados:", calculations.length);
+    
+    const calculations = await Calculation.find(); 
+   
     res.json(calculations);
+
   } catch (error) {
     console.error('Erro ao buscar cálculos:', error);
     res.status(500).json({ error: 'Erro ao buscar cálculos', details: error });
@@ -54,10 +56,12 @@ export const getAllCalculations = async (req: Request, res: Response): Promise<v
 };
 
 
+
 export const updateCalculation = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log("Recebendo requisição de atualização com body:", JSON.stringify(req.body, null, 2));
     const { id } = req.params;
+    const { number1, number2 } = req.body;
 
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -65,35 +69,38 @@ export const updateCalculation = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    if (!id) {
-      console.warn("ID não foi fornecido na requisição.");
-      res.status(400).json({ error: 'ID não foi fornecido.' });
-      return;
-    }
+    
+    const existingCalculation = await Calculation.findById(id);
 
-  
-    const updateData: Partial<ICalculation> = req.body;
-    console.log("Dados para atualizar:", updateData);
-
-    const updatedCalculation = await Calculation.findOneAndUpdate(
-      { _id: id },
-      updateData,
-      { new: true }
-    );
-
-    if (!updatedCalculation) {
+    if (!existingCalculation) {
       console.warn(`Cálculo com ID ${id} não encontrado para atualização.`);
       res.status(404).json({ error: 'Cálculo não encontrado' });
       return;
     }
 
+    
+    if (number1 != null || number2 != null) {
+      existingCalculation.number1 = number1 != null ? number1 : existingCalculation.number1;
+      existingCalculation.number2 = number2 != null ? number2 : existingCalculation.number2;
+      existingCalculation.status = 'pending'; 
+      existingCalculation.result = undefined; 
+    }
+
+    
+    const updatedCalculation = await existingCalculation.save();
     console.log("Cálculo atualizado com sucesso:", updatedCalculation);
+
+    
+    await RabbitMQService.sendToQueue('calculationQueue', updatedCalculation);
+
     res.json({ success: 'Cálculo atualizado com sucesso', updatedCalculation });
+
   } catch (error) {
     console.error("Erro ao atualizar cálculo:", error);
     res.status(500).json({ error: 'Erro ao atualizar cálculo', details: error });
   }
 };
+
 
 
 export const deleteCalculation = async (req: Request, res: Response): Promise<void> => {
@@ -116,7 +123,7 @@ export const deleteCalculation = async (req: Request, res: Response): Promise<vo
     
     const deletedCalculation = await Calculation.findByIdAndDelete(id);
     if (!deletedCalculation) {
-      console.warn(`Cálculo com ID ${id} não encontrado para deleção.`);
+      
       res.status(404).json({ error: 'Cálculo não encontrado' });
       return;
     }

@@ -4,7 +4,7 @@ import mongoose, { Document, Schema, Model } from 'mongoose';
 export interface ICalculation extends Document {
   number1: number;   
   number2: number;   
-  result?: number;   
+  result?: number ; 
   status: 'pending' | 'error' | 'done'; 
 }
 
@@ -20,7 +20,7 @@ const CalculationSchema: Schema = new Schema(
       required: true, 
     },
     result: {
-      type: Number,   
+      type: Number ,   
       required: false, 
     },
     status: {

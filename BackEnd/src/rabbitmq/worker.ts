@@ -1,73 +1,63 @@
 import amqp from 'amqplib';
-import { updateCalculation } from '../controllers/calculationControllerService'; 
-import connectDB from '../rabbitmq/conecctionDb'; 
-import Calculation from '../models/Calculation'; 
+import connectDB from '../rabbitmq/conecctionDb';
+import Calculation from '../models/Calculation';
 
-const QUEUE_NAME = 'calculationResultQueue';
+const CALCULATION_QUEUE = 'calculationQueue';
+const RESULT_QUEUE_NAME = 'calculationResultQueue';
 
 async function startWorker() {
   try {
-    
+    // Conecta ao banco de dados
     await connectDB();
 
-    
+    // Conecta ao RabbitMQ
     const connection = await amqp.connect('amqp://guest:guest@localhost:5672');
     const channel = await connection.createChannel();
-    await channel.assertQueue(QUEUE_NAME, { durable: true });
 
-    console.log(` [*] Aguardando mensagens na fila: ${QUEUE_NAME}. Para sair pressione CTRL+C`);
+    // Assegura que as filas existam
+    await channel.assertQueue(CALCULATION_QUEUE, { durable: true });
+    await channel.assertQueue(RESULT_QUEUE_NAME, { durable: true });
 
+    console.log(` [*] Aguardando mensagens na fila: ${CALCULATION_QUEUE}. Para sair pressione CTRL+C`);
+
+    
     channel.consume(
-      QUEUE_NAME,
+      RESULT_QUEUE_NAME,
       async (msg) => {
         if (msg !== null) {
           const messageContent = msg.content.toString();
-          console.log(' [x] Mensagem recebida:', messageContent);
+          console.log(' [x] Mensagem de resultado recebida:', messageContent);
 
           try {
             
-            const calculation = JSON.parse(messageContent);
+            const resultData = JSON.parse(messageContent);
 
-            
-            if (!calculation._id) {
+            if (!resultData._id) {
               console.error(' [!] Mensagem recebida sem _id:', messageContent);
               channel.ack(msg); 
               return;
             }
 
             
-            const existingCalculation = await Calculation.findById(calculation._id);
-            if (existingCalculation && existingCalculation.status === 'done') {
-              console.warn(' [!] Cálculo já foi processado, ignorando:', calculation._id);
-              channel.ack(msg); 
+            const existingCalculation = await Calculation.findById(resultData._id);
+            if (!existingCalculation) {
+              console.warn(' [!] Cálculo não encontrado, ignorando:', resultData._id);
+              channel.ack(msg);
               return;
             }
 
             
-            const updatedData = {
-              result: calculation.result,
-              status: calculation.status as 'done' | 'pending' | 'error', 
-            };
+            existingCalculation.result = resultData.result;
+            existingCalculation.status = 'done';
+           // existingCalculation.updatedAt = new Date();
 
-            
-            const req = {
-              params: { id: calculation._id },
-              body: updatedData,
-            };
-            const res = {
-              json: (response: any) => console.log(' [x] Resposta do updateCalculation:', response),
-              status: (code: number) => ({
-                json: (response: any) => console.error(`[!] Status ${code}:`, response),
-              }),
-            };
-
-            await updateCalculation(req as any, res as any); 
+            await existingCalculation.save();
+            console.log(' [x] Cálculo atualizado com sucesso no banco de dados:', existingCalculation);
 
             
             channel.ack(msg);
           } catch (error) {
-            console.error(' [!] Erro ao processar mensagem:', error);
-            
+            console.error(' [!] Erro ao processar mensagem de resultado:', error);
           }
         }
       },

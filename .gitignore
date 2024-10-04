@@ -69,3 +69,52 @@ coverage/
 # Compiled CSS
 *.css.map
 *.scss.map
+
+# C# e .NET Ignorar
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Mono Auto Generated Files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# VS Code directories
+.vscode/
+
+# Rider directories
+.idea/
+
+# ASP.NET Scaffolding
+.scaffolding
+
+# Visual Studio cache files
+.vs/
+
+# Paket dependency manager
+.paket/paket.exe
+paket-files/
+
+# ASP.NET temporary files
+*.Publish.xml
+.publish/
+
+# Web server settings
+*.vspscc
