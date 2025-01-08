@@ -19,6 +19,7 @@ Abrir pelo terminal a pasta BackEnd e inserir o comando  "npm start" para execut
 Abrir um novo terminal a pasta FrontEnd e inserir o comando "ng serve" para executar .
 o link para inserir no browser http://localhost:4200/calculation e visualizar o front.
 
+
 # worker Rabbit 
 Instalar o Erlang https://www.erlang.org/downloads *marcar PATH .
 
@@ -27,7 +28,7 @@ Instalar o rabbit https://www.rabbitmq.com/docs/install-windows
 Como administrador executar no prompt "rabbitmq-plugins enable rabbitmq_management"
 Depois o comando "rabbitmq-server" para iniciar
 
-No browser abrir http://localhost:15672/   Username:Guest Password:Guest 
+No browser abrir http://localhost:15672/   Username:guest Password:guest 
 
 Abrir um novo terminal na pasta BackEnd e inserir o comando  "npx ts-node src/rabbitmq/worker.ts" para executar.
 
